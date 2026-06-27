@@ -9,7 +9,6 @@ figure-8 paths. The model is built on the equations of motion from Stephan,
 The simulator is intended as a validated testbed for developing and testing
 flight control algorithms and trajectory generation.
 
-
 ## Repository layout
 
 ```
@@ -26,7 +25,8 @@ F450-Simulation/
 |------|---------|
 | `quadParams.m` | All configuration: physical model, controller gains, simulation rates, visual settings |
 | `quadDynamics.m` | Nonlinear flight dynamics model + RK4 integrator |
-| `quadControl.m` | Multi-rate cascaded controller and control allocation (mixer) |
+| `quadControl.m` | Controller factory (selects a controller by name) |
+| `quadControlCascade.m` | Multi-rate cascaded P/PID controller and mixer |
 | `quadTrajectory.m` | Trajectory generators (waypoint mission, lemniscate) |
 | `quadVisualize.m` | STL animation and analysis figures |
 | `quatUtils.m` | Quaternion helper functions |
@@ -113,7 +113,6 @@ becomes nonzero and aerodynamic drag becomes significant.
 The X-configuration uses PX4 motor numbering: M1 front-right (CCW),
 M2 rear-left (CCW), M3 front-left (CW), M4 rear-right (CW).
 
-
 ## Control architecture
 
 The controller is a multi-rate cascaded P / PID controller whose loop rates
@@ -149,10 +148,14 @@ thrust and body torques to four rotor commands using the airframe geometry.
 The control laws match the core PX4 v1.15 implementation
 (`rate_control.cpp`, `AttitudeControl.cpp`, `PositionControl.cpp`).
 
-The controller is pluggable: any controller that implements the common
-interface (`mixer`, `initState`, `step`) can be registered in `quadControl.m`,
-while the allocation and rotor-command mapping stay shared.
+The controller is pluggable. Each controller lives in its own file and exposes
+the same interface (`mixer`, `initState`, `step`). A small factory in
+`quadControl.m` selects one by name, so the top-level scripts switch controller
+by changing a single string:
 
+```matlab
+ctrl = quadControl('cascade');   % or 'indi', once added
+```
 
 ## Trajectories
 
@@ -163,7 +166,6 @@ its heading held constant (an LSPB position profile, so it flies straight with
 no mid-flight yaw), then on arrival holds position and rotates to the next
 heading with a cosine-eased yaw. The default mission takes off, flies a square
 loop stopping and turning at each corner, closes the loop, and lands.
-
 
 ### Lemniscate (figure-8)
 
@@ -179,7 +181,6 @@ The nose is kept tangent to the path (yaw = atan2(vy, vx)), like a coordinated
 turn. The trajectory yaw rate is fed forward to the attitude loop so the
 controller does not lag behind the continuously turning heading.
 
-
 ## To do
 
 - [ ] System identification: closed-loop chirp excitation with batch-LS ARX
@@ -193,8 +194,6 @@ controller does not lag behind the continuously turning heading.
 ## Dependencies
 
 https://www.mathworks.com/matlabcentral/fileexchange/83268-spatial-math-toolbox-for-matlab-peter-corke
-
-
 
 ## Reference
 
