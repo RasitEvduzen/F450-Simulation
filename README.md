@@ -9,7 +9,6 @@ figure-8 paths. The model is built on the equations of motion from Stephan,
 The simulator is intended as a validated testbed for developing and testing
 flight control algorithms and trajectory generation.
 
-<!-- Add a hero image / GIF of the animation here -->
 
 ## Repository layout
 
@@ -114,7 +113,6 @@ becomes nonzero and aerodynamic drag becomes significant.
 The X-configuration uses PX4 motor numbering: M1 front-right (CCW),
 M2 rear-left (CCW), M3 front-left (CW), M4 rear-right (CW).
 
-<!-- Add a diagram of the airframe / motor layout here -->
 
 ## Control architecture
 
@@ -155,7 +153,6 @@ The controller is pluggable: any controller that implements the common
 interface (`mixer`, `initState`, `step`) can be registered in `quadControl.m`,
 while the allocation and rotor-command mapping stay shared.
 
-<!-- Add tracking / states / motor analysis figures here -->
 
 ## Trajectories
 
@@ -167,7 +164,6 @@ no mid-flight yaw), then on arrival holds position and rotates to the next
 heading with a cosine-eased yaw. The default mission takes off, flies a square
 loop stopping and turning at each corner, closes the loop, and lands.
 
-<!-- Add square mission animation / trajectory plot here -->
 
 ### Lemniscate (figure-8)
 
@@ -183,7 +179,6 @@ The nose is kept tangent to the path (yaw = atan2(vy, vx)), like a coordinated
 turn. The trajectory yaw rate is fed forward to the attitude loop so the
 controller does not lag behind the continuously turning heading.
 
-<!-- Add figure-8 animation / trajectory plot here -->
 
 ## To do
 
