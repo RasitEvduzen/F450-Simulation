@@ -10,15 +10,13 @@
 %  MODE:
 %     'mission'    - fly a square loop (take off, stop-turn at waypoints, land)
 %     'lemniscate' - fly a Gerono lemniscate (figure-8) with the nose tangent
-%
-%  (system identification lives in its own script: runSysId.m)
 % Written By: Rasit Evduzen
 % Date: 26.06.2026
 %%
 clc; clear; close all;
 addpath('src');
 
-mode = ['lemniscate'];          % 'mission' (square) or 'lemniscate'
+mode = ['mission'];          % 'mission' (square) or 'lemniscate'
 
 % --- load modules ---
 P    = quadParams();
