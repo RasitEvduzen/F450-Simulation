@@ -227,7 +227,7 @@ $$
 
 The terms are:
 
-- $\boldsymbol{\tau}_\Sigma = (L_\Sigma, M_\Sigma, N_\Sigma)^\top$ is the
+- $\boldsymbol{\tau}_ \Sigma = (L_\Sigma, M_\Sigma, N_\Sigma)^\top$ is the
   aerodynamic propulsion torque from the rotors (roll, pitch, yaw).
 - $\boldsymbol{\tau}_D$ is the airframe drag torque, capturing aerodynamic
   torque not produced by the rotors.
