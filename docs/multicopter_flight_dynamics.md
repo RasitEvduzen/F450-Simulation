@@ -124,7 +124,7 @@ $$
 I_{\text{mot}} = \frac{E\, \delta - k_e\, \Omega}{R_{\text{mot}}}
 $$
 
-where $E$ is the ESC terminal voltage, $\delta$ the PWM signal, $k_e$ the
+where $E$ is the ESC terminal voltage, $\delta the PWM signal, $k_e$ the
 electrical motor constant, and $R_{\text{mot}}$ the motor resistance. The motor
 torque is $M_R = k_T I_{\text{mot}}$, and with $k_T = k_e$ (a common BLDC
 approximation) the motor dynamics become
@@ -330,18 +330,14 @@ $$
 
 $$
 \begin{aligned}
-J_b\, \dot{\boldsymbol{\omega}} = {}& \boldsymbol{\tau}_\Sigma
-- \big(C_\omega + C_\omega'\, \lVert \boldsymbol{\omega}_A \rVert\big)\, \boldsymbol{\omega}_A + \boldsymbol{\tau}_d \\
-& - \sum_{i=1}^{N} \vartheta_i\, J_R\, \mathbf{n}_i\, \dot{\Omega}_i
-- \boldsymbol{\omega} \times \Big(J_b\, \boldsymbol{\omega} + \sum_{i=1}^{N} \vartheta_i\, J_R\, \mathbf{n}_i\, \Omega_i\Big)
+J_b\, \dot{\boldsymbol{\omega}} = {}& \boldsymbol{\tau}_\Sigma - \big(C_\omega + C_\omega'\, \lVert \boldsymbol{\omega}_A \rVert\big)\, \boldsymbol{\omega}_A + \boldsymbol{\tau}_d \\
+& - \sum_{i=1}^{N} \vartheta_i\, J_R\, \mathbf{n}_i\, \dot{\Omega}_i - \boldsymbol{\omega} \times \Big(J_b\, \boldsymbol{\omega} + \sum_{i=1}^{N} \vartheta_i\, J_R\, \mathbf{n}_i\, \Omega_i\Big)
 \end{aligned}
 $$
 
 $$
 \begin{aligned}
-m\, \dot{\mathbf{v}} = {}& R_{gb}\, \mathbf{F}_\Sigma
-- \big(c_v + c_v'\, \lVert \mathbf{v}_A \rVert\big)\, \mathbf{v}_A + \mathbf{F}_d
-+ m\, \mathbf{g}
+m\, \dot{\mathbf{v}} = {}& R_{gb}\, \mathbf{F}_\Sigma - \big(c_v + c_v'\, \lVert \mathbf{v}_A \rVert\big)\, \mathbf{v}_A + \mathbf{F}_d + m\, \mathbf{g}
 \end{aligned}
 $$
 
