@@ -124,7 +124,7 @@ $$
 I_{\text{mot}} = \frac{E\, \delta - k_e\, \Omega}{R_{\text{mot}}}
 $$
 
-where $E$ is the ESC terminal voltage, $\delta$ the PWM signal, $k_e$ the
+where $E$ is the ESC terminal voltage, $\delta the PWM signal, $k_e$ the
 electrical motor constant, and $R_{\text{mot}}$ the motor resistance. The motor
 torque is $M_R = k_T I_{\text{mot}}$, and with $k_T = k_e$ (a common BLDC
 approximation) the motor dynamics become
@@ -202,7 +202,7 @@ momentum stored in the spinning rotors:
 
 $$
 \begin{aligned}
-    \mathbf{h = J_b\, \boldsymbol{\omega} + \mathbf{h}_R, \\
+    \mathbf{h} = J_b\, \boldsymbol{\omega} + \mathbf{h}_R, \\
     \mathbf{h}_R = \sum_{i=1}^{N} \vartheta_i\, J_R\, \mathbf{n}_i\, \Omega_i
 \end{aligned}
 $$
@@ -218,7 +218,8 @@ $$
 
 ### 3.3 Rotational Dynamics
 
-Applying the principle of angular momentum gives the rotational equation of motion:
+Applying the principle of angular momentum gives the rotational equation of
+motion:
 
 $$
 J_b\, \dot{\boldsymbol{\omega}} + \dot{\mathbf{h}}_R + \boldsymbol{\omega} \times \big(J_b\, \boldsymbol{\omega} + \mathbf{h}_R\big) = \boldsymbol{\tau}_\Sigma + \boldsymbol{\tau}_D
@@ -226,16 +227,26 @@ $$
 
 The terms are:
 
-- $\boldsymbol{\tau}_\Sigma = (L_\Sigma, M_\Sigma, N_\Sigma)^\top$ is the aerodynamic propulsion torque from the rotors (roll, pitch, yaw).
-- $\boldsymbol{\tau}_D$ is the airframe drag torque, capturing aerodynamic torque not produced by the rotors.
-- $\dot{\mathbf{h}}_R$ is the rotor spin-up reaction torque: changing rotor speed changes rotor momentum, and the airframe feels the reaction.
-- $\boldsymbol{\omega} \times (J_b \boldsymbol{\omega} + \mathbf{h}_R)$ is the gyroscopic coupling. The part $\boldsymbol{\omega} \times J_b \boldsymbol{\omega}$ is the rigid-body cross-coupling; the part $\boldsymbol{\omega} \times \mathbf{h}_R$ is the gyroscopic effect of the spinning rotors, which resists tilting and couples the axes.
+- $\boldsymbol{\tau}_\Sigma = (L_\Sigma, M_\Sigma, N_\Sigma)^\top$ is the
+  aerodynamic propulsion torque from the rotors (roll, pitch, yaw).
+- $\boldsymbol{\tau}_D$ is the airframe drag torque, capturing aerodynamic
+  torque not produced by the rotors.
+- $\dot{\mathbf{h}}_R$ is the rotor spin-up reaction torque: changing rotor
+  speed changes rotor momentum, and the airframe feels the reaction.
+- $\boldsymbol{\omega} \times (J_b \boldsymbol{\omega} + \mathbf{h}_R)$ is the
+  gyroscopic coupling. The part $\boldsymbol{\omega} \times J_b \boldsymbol{\omega}$
+  is the rigid-body cross-coupling; the part $\boldsymbol{\omega} \times \mathbf{h}_R$
+  is the gyroscopic effect of the spinning rotors, which resists tilting and
+  couples the axes.
 
-The spin-up term $\dot{\mathbf{h}}_R$ vanishes only if the rotors are not accelerating ($\dot{\Omega}_i = 0$); the gyroscopic term $\boldsymbol{\omega} \times \mathbf{h}_R$ vanishes only at rest ($\boldsymbol{\omega} = 0$) or with zero rotor momentum.
+The spin-up term $\dot{\mathbf{h}}_R$ vanishes only if the rotors are not
+accelerating ($\dot{\Omega}_i = 0$); the gyroscopic term $\boldsymbol{\omega} \times \mathbf{h}_R$ vanishes only at rest ($\boldsymbol{\omega} = 0$) or with zero rotor momentum.
 
 ### 3.4 Propulsion Torque and Force
 
-The propulsion torque sums, over all rotors, a force-induced component (thrust and in-plane force acting through the lever arm $\mathbf{p}_i$) and a drag component (rotor drag torque):
+The propulsion torque sums, over all rotors, a force-induced component (thrust
+and in-plane force acting through the lever arm $\mathbf{p}_i$) and a drag
+component (rotor drag torque):
 
 $$
 \boldsymbol{\tau}_\Sigma = \sum_{i=1}^{N} \mathbf{p}_i \times \big(\mathbf{n}_i T_i + \mathbf{m}_i H_i\big) - \vartheta_i\, \mathbf{n}_i\, Q_i
@@ -247,7 +258,10 @@ $$
 \mathbf{F}_\Sigma = \sum_{i=1}^{N} \mathbf{n}_i T_i + \mathbf{m}_i H_i
 $$
 
-where $\mathbf{m}_i$ is the direction of the in-plane force, parallel to the horizontal inflow. The roll and pitch torque arise from thrust through the arm; the yaw torque arises from rotor drag (and, through $\dot{\mathbf{h}}_R$, from spin-up).
+where $\mathbf{m}_i$ is the direction of the in-plane force, parallel to the
+horizontal inflow. The roll and pitch torque arise from thrust through the arm;
+the yaw torque arises from rotor drag (and, through $\dot{\mathbf{h}}_R$, from
+spin-up).
 
 ### 3.5 Translational Motion
 
@@ -262,7 +276,7 @@ $$
 \dot{\mathbf{r}} = \mathbf{v}
 $$
 
-where $m$ is the vehicle mass, $\mathbf{F}_D the airframe drag force, and
+where $m$ is the vehicle mass, $\mathbf{F}_D$ the airframe drag force, and
 gravity points in the positive (downward) $z$ direction of the NED frame.
 
 ---
