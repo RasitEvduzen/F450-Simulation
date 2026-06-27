@@ -185,6 +185,12 @@ controller does not lag behind the continuously turning heading.
 - [ ] Add linear aerodynamic drag to relax the near-hover assumption for
       high-speed flight
 
+## Dependencies
+
+https://www.mathworks.com/matlabcentral/fileexchange/83268-spatial-math-toolbox-for-matlab-peter-corke
+
+
+
 ## Reference
 
 Stephan, J. *Multicopter Flight Control*. Springer, 2025.
