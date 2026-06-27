@@ -13,7 +13,17 @@ flight control algorithms and trajectory generation.
 
 ## Repository layout
 
-| File | Purpose |
+```
+F450-Simulation/
+├── runMission.m        top-level: run a trajectory (mission or lemniscate)
+├── runSysId.m          top-level: run system identification
+├── src/                model, controller, trajectory, visualisation, helpers
+├── stl/                airframe STL meshes (Base, MotorPropCW, MotorPropCCW)
+├── media/              figures and animations for this README
+└── docs/               notes and derivations
+```
+
+| File (in `src/`) | Purpose |
 |------|---------|
 | `quadParams.m` | All configuration: physical model, controller gains, simulation rates, visual settings |
 | `quadDynamics.m` | Nonlinear flight dynamics model + RK4 integrator |
@@ -21,19 +31,19 @@ flight control algorithms and trajectory generation.
 | `quadTrajectory.m` | Trajectory generators (waypoint mission, lemniscate) |
 | `quadVisualize.m` | STL animation and analysis figures |
 | `quatUtils.m` | Quaternion helper functions |
-| `runMission.m` | Top-level script: run a trajectory (mission or lemniscate) |
+| `quadSysId.m` | Closed-loop chirp excitation + ARX identification |
 
 ## Running
 
-Put the STL files (`Base.STL`, `MotorPropCW.STL`, `MotorPropCCW.STL`) on the
-MATLAB path, then run `runMission.m`. Select the trajectory at the top of the
-script:
+From the repository root, run `runMission.m`. It adds `src/` to the path
+automatically and reads the STL meshes from `stl/`. Select the trajectory at
+the top of the script:
 
 ```matlab
 mode = 'mission';      % 'mission' (square) or 'lemniscate'
 ```
 
-Everything tunable lives in `quadParams.m`.
+Everything tunable lives in `src/quadParams.m`.
 
 ## Dynamics
 

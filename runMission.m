@@ -16,8 +16,9 @@
 % Date: 26.06.2026
 %%
 clc; clear; close all;
+addpath('src');
 
-mode = 'lemniscate';          % 'mission' (square) or 'lemniscate'
+mode = 'mission';          % 'mission' (square) or 'lemniscate'
 
 % --- load modules ---
 P    = quadParams();

@@ -57,9 +57,9 @@ function P = quadParams()
     P.dt     = 1/P.f_phys;            % integration step [s]
 
     %% Visualisation
-    P.stl.base    = 'Base.STL';
-    P.stl.propCW  = 'MotorPropCW.STL';
-    P.stl.propCCW = 'MotorPropCCW.STL';
+    P.stl.base    = 'stl/Base.STL';
+    P.stl.propCW  = 'stl/MotorPropCW.STL';
+    P.stl.propCCW = 'stl/MotorPropCCW.STL';
     P.stl.scale   = 1e-3;             % STL mm -> model m
     P.stl.flip    = [1 0 0; 0 -1 0; 0 0 -1];  % mount prop the right way up
     P.stl.propZ   = -0.0185;          % display-only prop height above body [m]
