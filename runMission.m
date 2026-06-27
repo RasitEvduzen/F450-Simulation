@@ -18,7 +18,7 @@
 clc; clear; close all;
 addpath('src');
 
-mode = 'mission';          % 'mission' (square) or 'lemniscate'
+mode = ['lemniscate'];          % 'mission' (square) or 'lemniscate'
 
 % --- load modules ---
 P    = quadParams();
