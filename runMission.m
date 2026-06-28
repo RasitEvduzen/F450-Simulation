@@ -50,8 +50,8 @@ function runMissionMode(P, dyn, ctrl, traj, vis)
 
     Binv = ctrl.mixer(P);
     st   = ctrl.initState(P);
-    x = zeros(17,1); x(1:4)=P.Om_hover; x(5)=1;
-    X = zeros(17,N); propAng = zeros(4,N); pa = zeros(4,1);
+    x = zeros(18,1); x(1:4)=P.Om_hover; x(5)=1; x(18)=P.bat.Q_init;
+    X = zeros(18,N); propAng = zeros(4,N); pa = zeros(4,1);
 
     LOG.vel_sp  = zeros(3,N);
     LOG.rate_sp = zeros(3,N);
@@ -59,6 +59,10 @@ function runMissionMode(P, dyn, ctrl, traj, vis)
     LOG.T_mot   = zeros(4,N);
     LOG.torque  = zeros(3,N);
     LOG.Fz      = zeros(1,N);
+    LOG.Vbat    = zeros(1,N);          % battery terminal/open-circuit voltage [V]
+    LOG.SoC     = zeros(1,N);          % state of charge [%]
+    LOG.delta   = zeros(4,N);          % per-rotor PWM command [0..1]
+    LOG.Ibat    = zeros(1,N);          % battery pack current I_Sigma [A]
 
     n_rate = max(1, round(P.f_phys/P.f_rate));
     n_att  = max(1, round(P.f_phys/P.f_att));
@@ -86,11 +90,17 @@ function runMissionMode(P, dyn, ctrl, traj, vis)
         LOG.T_mot(:,k)   = st.T_mot;
         LOG.torque(:,k)  = st.torque;
         LOG.Fz(k)        = st.Fz_cmd;
+        LOG.Vbat(k)      = dyn.vbat(x, P);
+        LOG.SoC(k)       = 100*x(18)/P.bat.Q0;
+        LOG.delta(:,k)   = st.delta;
+        LOG.Ibat(k)      = dyn.current(x, st.delta, P);
     end
 
     vis.figures(t, X, REF, P);
     vis.states(t, X, REF, LOG, P);
     vis.motors(t, LOG, P);
+    vis.battery(t, X, LOG, P);
+    vis.rpm(t, X, P);
     vis.animate(t, X, REF, propAng, P);
 end
 
@@ -107,14 +117,18 @@ function runLemniscateMode(P, dyn, ctrl, traj, vis)
     Binv = ctrl.mixer(P);
     st   = ctrl.initState(P);
     % start on the path, already pointing along it
-    x = zeros(17,1); x(1:4)=P.Om_hover;
+    x = zeros(18,1); x(1:4)=P.Om_hover;
     x(5:8) = [cos(REF(1,4)/2); 0; 0; sin(REF(1,4)/2)];
     x(15:17) = REF(1,1:3)';
-    X = zeros(17,N); propAng = zeros(4,N); pa = zeros(4,1);
+    x(18) = P.bat.Q_init;
+    X = zeros(18,N); propAng = zeros(4,N); pa = zeros(4,1);
 
     LOG.vel_sp  = zeros(3,N);  LOG.rate_sp = zeros(3,N);
     LOG.qd      = zeros(4,N);  LOG.T_mot   = zeros(4,N);
     LOG.torque  = zeros(3,N);  LOG.Fz      = zeros(1,N);
+    LOG.Vbat    = zeros(1,N);  LOG.SoC     = zeros(1,N);
+    LOG.delta   = zeros(4,N);
+    LOG.Ibat    = zeros(1,N);
 
     n_rate = max(1, round(P.f_phys/P.f_rate));
     n_att  = max(1, round(P.f_phys/P.f_att));
@@ -138,10 +152,15 @@ function runLemniscateMode(P, dyn, ctrl, traj, vis)
         LOG.vel_sp(:,k)  = st.vel_sp;   LOG.rate_sp(:,k) = st.rate_sp;
         LOG.qd(:,k)      = st.qd;       LOG.T_mot(:,k)   = st.T_mot;
         LOG.torque(:,k)  = st.torque;   LOG.Fz(k)        = st.Fz_cmd;
+        LOG.Vbat(k)      = dyn.vbat(x, P);  LOG.SoC(k) = 100*x(18)/P.bat.Q0;
+        LOG.delta(:,k)   = st.delta;
+        LOG.Ibat(k)      = dyn.current(x, st.delta, P);
     end
 
     vis.figures(t, X, REF, P);
     vis.states(t, X, REF, LOG, P);
     vis.motors(t, LOG, P);
+    vis.battery(t, X, LOG, P);
+    vis.rpm(t, X, P);
     vis.animate(t, X, REF, propAng, P);
 end

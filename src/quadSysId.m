@@ -39,7 +39,7 @@ function runSysId(P, dyn, ctrl, vis)
     z_hover  = -2.0;  T_take = 4.0;  T_settle = 1.5;
 
     Binv = ctrl.mixer(P);
-    x = zeros(17,1); x(1:4)=P.Om_hover; x(5)=1;
+    x = zeros(18,1); x(1:4)=P.Om_hover; x(5)=1; x(18)=P.bat.Q_init;
     s.rate_int = zeros(3,1); s.w_prev = zeros(3,1);
     s.vel_int  = zeros(3,1); s.v_prev = zeros(3,1);
     pos_sp = [0; 0; z_hover];
@@ -130,7 +130,13 @@ function [delta, s, uk, yk] = hoverStep(x, pos_sp, exc, ax, phase, P, Binv, s)
     Fz = coll/P.hover_thr*P.m*P.g;
     Tm = max(Binv*[Fz; torque], 0.01);
     Om = sqrt(Tm/P.cT);
-    delta = max(min((Om + P.cQ*Om.^2/P.kT)/P.Ehat, 1), 0);
+    % live battery voltage (Eq. 3.53) for proactive PWM compensation, then
+    % invert the motor model (Eq. 3.36, stationary) for the PWM command
+    Qsafe = max(x(18), 1e-3);
+    vbat  = P.bat.E0 - P.bat.Epol*(P.bat.Q0/Qsafe) ...
+            + P.bat.Eexp*exp(-(P.bat.Q0-Qsafe)/P.bat.Qexp);
+    delta = (P.kT*Om + P.Rmot*(P.cQ*Om.^2 + P.MF)/P.kT)/vbat;
+    delta = max(min(delta, 1), 0);
 
     if strcmp(phase,'chirp')
         if strcmp(ax,'altitude'), uk = Fz; yk = x(14);
@@ -281,7 +287,7 @@ function txt = tfText(axisName, model, P, uunit, yunit)
         ''
         'Notes:'
         '  pole near z=1   -> integrator (rate/velocity)'
-        sprintf('  pole near %.3f -> motor lag (z = exp(-Ts/tau_mot))', exp(-Ts/(P.JR/P.kT)))
+        sprintf('  pole near %.3f -> motor lag (z = exp(-Ts/tau_mot))', exp(-Ts/(P.JR*P.Rmot/P.kT^2)))
     };
     txt = strjoin(txt, newline);
 end

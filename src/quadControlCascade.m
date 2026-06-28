@@ -34,11 +34,18 @@ function Binv = buildMixer(P)
 end
 
 %% ---- shared: [collective; torque] -> per-rotor PWM ----
-function [delta, T_mot] = rotorCommand(coll, torque, P, Binv)
+% [collective; torque] -> per-rotor PWM, using the physical motor model
+% (Stephan Eq. 3.36) inverted for stationary operation (Omdot = 0):
+%   delta_i = ( kT*Om_cmd + Rmot*(cQ*Om_cmd^2 + MF)/kT ) / vbat
+% vbat is the LIVE battery voltage passed in from the plant, so PWM is scaled
+% by the current pack voltage (proactive voltage compensation, like PX4): as
+% the battery sags/drains, delta is raised to hold the commanded thrust.
+function [delta, T_mot] = rotorCommand(coll, torque, P, Binv, vbat)
     Fz_cmd = coll/P.hover_thr*P.m*P.g;
     T_mot  = max(Binv*[Fz_cmd; torque], 0.01);
     Om_cmd = sqrt(T_mot/P.cT);
-    delta  = max(min((Om_cmd + P.cQ*Om_cmd.^2/P.kT)/P.Ehat, 1), 0);
+    delta  = (P.kT*Om_cmd + P.Rmot*(P.cQ*Om_cmd.^2 + P.MF)/P.kT)/vbat;
+    delta  = max(min(delta, 1), 0);
 end
 
 %% Cascade controller (multi-rate): position -> velocity -> attitude -> rate
@@ -65,6 +72,12 @@ end
 function [delta, st] = cascadeStep(x, ref, st, P, Binv, run)
     Q = quatUtils();
     q = x(5:8); w = x(9:11); pos = x(15:17); vel = x(12:14);
+    % live battery open-circuit voltage for proactive PWM voltage compensation
+    %   Ehat(Q) = E0 - Epol*(Q0/Q) + Eexp*exp(-(Q0-Q)/Qexp)   (Stephan Eq. 3.53)
+    Qbat = x(18);
+    Qsafe = max(Qbat, 1e-3);
+    vbat  = P.bat.E0 - P.bat.Epol*(P.bat.Q0/Qsafe) ...
+            + P.bat.Eexp*exp(-(P.bat.Q0-Qsafe)/P.bat.Qexp);
 
     % --- POSITION (P) -> velocity sp ; VELOCITY (PID) -> accel sp ; bridge ---
     if run.pos
@@ -108,7 +121,7 @@ function [delta, st] = cascadeStep(x, ref, st, P, Binv, run)
         st.rate_int = max(min(st.rate_int, P.int_lim), -P.int_lim);
         st.torque = torque;                          % logged: [tau_x; tau_y; tau_z]
         st.Fz_cmd = st.coll/P.hover_thr*P.m*P.g;      % logged: collective thrust [N]
-        [st.delta, st.T_mot] = rotorCommand(st.coll, torque, P, Binv);
+        [st.delta, st.T_mot] = rotorCommand(st.coll, torque, P, Binv, vbat);
     end
     delta = st.delta;
 end

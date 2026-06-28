@@ -13,6 +13,8 @@ function out = quadVisualize()
     out.figures = @figures;
     out.states  = @states;
     out.motors  = @motors;
+    out.battery = @battery;
+    out.rpm     = @rpm;
 end
 
 function animate(t, X, REF, propAng, P, phases)
@@ -253,4 +255,87 @@ function motors(t, LOG, ~)
         legend({cmd{r,5}},'Location','best');
         if r==4, xlabel('time [s]'); end
     end
+end
+function battery(t, X, LOG, P)
+%BATTERY  Battery state over the flight: terminal voltage, state of charge,
+%   per-cell voltage, and total rotor speed. Shows the LiPo pack draining and
+%   sagging as the mission runs (Stephan Eqs. 3.52-3.54).
+    te = t(end);
+    Vbat = LOG.Vbat(:)';            % terminal/open-circuit voltage [V]
+    SoC  = LOG.SoC(:)';             % state of charge [%]
+    Qbat = X(18,:);                 % charge [Ah]
+    Vcell = Vbat/P.bat.NS;          % per-cell voltage [V]
+    Ibat  = LOG.Ibat(:)';           % pack current I_Sigma [A]
+
+    cV=[0.20 0.40 0.70]; cQ=[0.85 0.15 0.15]; cRef=[0 0 0];
+
+    figure('Name','Battery','Color','w','units','normalized','outerposition',[0 0 1 1]);
+    tl = tiledlayout(2,2,'Padding','compact','TileSpacing','compact');
+
+    % (1) terminal voltage, with nominal and full-charge reference lines
+    nexttile; hold on; grid on; box on;
+    plot(t, Vbat, '-','Color',cV,'LineWidth',1.6);
+    yline(P.bat.E0,'--','Color',cRef,'LineWidth',1.0,'HandleVisibility','off');
+    ylabel('voltage [V]'); xlabel('time [s]'); xlim([0 te]);
+    title('Battery terminal voltage  E(t)');
+    legend({'E','E_0 nominal'},'Location','best');
+
+    % (2) state of charge [%]
+    nexttile; hold on; grid on; box on;
+    plot(t, SoC, '-','Color',cQ,'LineWidth',1.6);
+    ylabel('SoC [%]'); xlabel('time [s]'); xlim([0 te]); ylim([0 105]);
+    title(sprintf('State of charge   (used %.2f Ah of %.1f Ah)', ...
+          P.bat.Q0 - Qbat(end), P.bat.Q0));
+    legend({'Q / Q_0'},'Location','best');
+
+    % (3) per-cell voltage (4.2 full ... 3.0 empty guide lines)
+    nexttile; hold on; grid on; box on;
+    plot(t, Vcell, '-','Color',cV,'LineWidth',1.6);
+    yline(4.2,'--','Color',[0.4 0.4 0.4],'LineWidth',0.8,'HandleVisibility','off');
+    yline(3.3,'--','Color',[0.4 0.4 0.4],'LineWidth',0.8,'HandleVisibility','off');
+    ylabel('cell voltage [V]'); xlabel('time [s]'); xlim([0 te]);
+    title(sprintf('Per-cell voltage  (%dS pack)',P.bat.NS));
+    legend({'E/N_S'},'Location','best');
+
+    % (4) pack current drawn from the battery: rises with thrust demand and
+    %     with voltage compensation as the pack drains
+    nexttile; hold on; grid on; box on;
+    plot(t, Ibat, '-','Color',cQ,'LineWidth',1.4);
+    ylabel('I_\Sigma [A]'); xlabel('time [s]'); xlim([0 te]);
+    title('Battery pack current  I_\Sigma');
+    legend({'I_\Sigma'},'Location','best');
+
+    title(tl,'Battery: discharge, voltage & compensation','FontWeight','bold');
+end
+
+function rpm(t, X, ~)
+%RPM  Per-motor rotor speed [RPM], laid out like the drone seen from above
+%   (X-config): front-left M3 | front-right M1 ; rear-left M2 | rear-right M4.
+%   Rotor speed is state X(1:4); RPM = Omega*60/(2*pi).
+    te = t(end);
+    RPM = X(1:4,:)*60/(2*pi);       % rad/s -> RPM, rows = M1..M4
+    cLine = [0.20 0.40 0.70];
+
+    figure('Name','Motor RPM','Color','w','units','normalized','outerposition',[0 0 1 1]);
+    tl = tiledlayout(2,2,'Padding','compact','TileSpacing','compact');
+
+    % layout (view from above), tiles are row-major:
+    %   tile 1 (top-left)  = M3 front-left
+    %   tile 2 (top-right) = M1 front-right
+    %   tile 3 (bot-left)  = M2 rear-left
+    %   tile 4 (bot-right) = M4 rear-right
+    tileMotor = [3 1 2 4];                        % motor index shown in each tile
+    motorLbl  = { 'M1  front-right (CCW)', ...
+                  'M2  rear-left (CCW)', ...
+                  'M3  front-left (CW)', ...
+                  'M4  rear-right (CW)' };
+    for tile = 1:4
+        m = tileMotor(tile);
+        nexttile; hold on; grid on; box on;
+        plot(t, RPM(m,:), '-','Color',cLine,'LineWidth',1.3);
+        title(motorLbl{m}); ylabel('RPM'); xlim([0 te]);
+        legend({sprintf('M%d',m)},'Location','best');
+        if tile >= 3, xlabel('time [s]'); end
+    end
+    title(tl,'Per-motor rotor speed (RPM)','FontWeight','bold');
 end

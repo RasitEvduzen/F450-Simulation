@@ -9,11 +9,40 @@ function P = quadParams()
     P.Jb  = diag([0.02 0.02 0.04]);   % body inertia [kg m^2]
 
     P.JR   = 6e-5;                    % rotor + motor inertia [kg m^2]
-    P.kT   = 0.003;                   % motor torque constant (tau_mot = JR/kT)
-    P.Ehat = 1031.3;                  % voltage term (tuned so hover delta ~0.5)
-    P.MF   = 0.0;                     % motor friction
+
+    %% Motor / ESC (BLDC, Stephan Eqs. 3.31-3.36)
+    %  Motor dynamics:  JR*Omdot = (kT/Rmot)*(E*delta - ke*Omega) - MF - Q
+    %  ESC voltage:     E_mot = delta*E,  E = battery terminal voltage Ehat(Q)
+    %  Armature current is taken quasi-static (Eq. 3.33): the full electrical
+    %  dynamics is  L*dI/dt = E*delta - ke*Omega - Rmot*I, but the electrical
+    %  time constant L/Rmot (~0.3 ms) is ~1000x faster than the rotor (~600 ms),
+    %  so dI/dt = 0 is assumed and current is algebraic. L is kept as a parameter
+    %  for documentation only (=0); making it >0 turns I into a stiff state that
+    %  needs an implicit solver, not the 1 kHz RK4 used here.
+    P.kT   = 0.02894;                 % torque constant [Nm/A] (kV ~ 330 RPM/V)
+    P.ke   = P.kT;                    % back-EMF constant [V/(rad/s)]; ke = kT (BLDC), edit if real data differs
+    P.Rmot = 0.08;                    % motor resistance [Ohm]
+    P.Lmot = 0.0;                     % armature inductance [H]; modeled as 0 (quasi-static current, see above)
+    P.MF   = 0.0;                     % motor friction torque [Nm]
     P.cT   = 1.5e-5;                  % thrust coeff:  T = cT*Omega^2
     P.cQ   = 2.5e-7;                  % drag   coeff:  Q = cQ*Omega^2
+
+    %% Battery (LiPo discharge model, Stephan Eqs. 3.52-3.54)
+    %  Test pack: 8S / 5Ah / 100C. State of Charge Q [Ah] is an extra plant
+    %  state; terminal voltage follows the open-circuit curve Ehat(Q) minus the
+    %  internal-resistance sag Rbat*I_Sigma. Coulomb counting: Qdot = -I_Sigma.
+    %    Ehat(Q) = E0 - Epol*(Q0/Q) + Eexp*exp(-(Q0-Q)/Qexp)
+    %    E = Ehat(Q) - Rbat*I_Sigma
+    P.bat.NS      = 8;                % series cells
+    P.bat.Q0      = 5.0;             % capacity / full charge [Ah]
+    P.bat.Crating = 100;            % C-rating
+    P.bat.Imax    = P.bat.Q0*P.bat.Crating;   % max discharge current [A] (=500)
+    P.bat.E0      = P.bat.NS*3.8;    % nominal voltage [V] (plateau, ~3.8 V/cell)
+    P.bat.Epol    = P.bat.NS*0.045;  % polarisation voltage [V] (end-of-charge sag)
+    P.bat.Eexp    = P.bat.NS*0.30;   % exponential-zone overshoot [V] (full-charge peak)
+    P.bat.Qexp    = 0.35;           % exponential-zone inverse decay [Ah]
+    P.bat.Rbat    = 0.010;          % internal resistance [Ohm] (voltage sag)
+    P.bat.Q_init  = P.bat.Q0;        % initial charge [Ah] (start full)
 
     %% Geometry: F450 X-config
     % M1 front-right (CCW), M2 rear-left (CCW), M3 front-left (CW), M4 rear-right (CW)
@@ -25,7 +54,11 @@ function P = quadParams()
 
     %% Hover trim (derived)
     P.Om_hover    = sqrt(P.m*P.g/(4*P.cT));
-    P.delta_hover = (P.Om_hover + P.cQ*P.Om_hover^2/P.kT)/P.Ehat;
+    % full-charge open-circuit voltage, then invert the motor model (Eq. 3.36,
+    % stationary) for the PWM that holds Om_hover: used only as the held initial
+    % command; the controller recomputes delta each step at the live voltage.
+    Ehat_full     = P.bat.E0 - P.bat.Epol + P.bat.Eexp;   % Ehat at Q = Q0
+    P.delta_hover = (P.kT*P.Om_hover + P.Rmot*(P.cQ*P.Om_hover^2 + P.MF)/P.kT)/Ehat_full;
 
     %% Controller gains (baseline cascade)
     P.Kp_rate = [0.15; 0.15; 0.20];   % rate loop
