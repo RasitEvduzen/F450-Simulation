@@ -36,7 +36,6 @@ function animate(t, X, REF, propAng, P, phases)
 
     N = numel(t);
     fig = figure('Name','F450 Flight','Color','w','units','normalized','outerposition',[0 0 1 1]);
-    gif('SysID.gif')
     % wide-view fixed limits (whole mission, equal scale)
     allP = [REF(:,1:3); X(15:17,:)'];
     mn=min(allP,[],1); mx=max(allP,[],1); ctr=(mn+mx)/2; sp=max(mx-mn)+1.0;
@@ -105,7 +104,6 @@ function animate(t, X, REF, propAng, P, phases)
         axis(axF,[pos(1)-P.vis.viewR pos(1)+P.vis.viewR pos(2)-P.vis.viewR ...
                   pos(2)+P.vis.viewR pos(3)-P.vis.viewR pos(3)+P.vis.viewR]);
         drawnow limitrate;
-        gif
     end
 end
 

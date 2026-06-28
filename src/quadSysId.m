@@ -38,10 +38,10 @@ function runSysId(P, dyn, ctrl, vis)
     % higher wastes energy where coherence is already low. Shorter Tend (10 s)
     % with a lower f1 also concentrates energy in the informative band, which
     % improves the ARX fit and coherence.
-    axes = { 'roll',     struct('Tend',5,'f0',0.5,'f1',30,'amp',deg2rad(40));
-             'pitch',    struct('Tend',5,'f0',0.5,'f1',30,'amp',deg2rad(40));
-             'yaw',      struct('Tend',5,'f0',0.5,'f1',15,'amp',deg2rad(45));
-             'altitude', struct('Tend',5,'f0',1.0,'f1',10,'amp',0.05) };
+    axes = { 'roll',     struct('Tend',10,'f0',0.5,'f1',30,'amp',deg2rad(40));
+             'pitch',    struct('Tend',10,'f0',0.5,'f1',30,'amp',deg2rad(40));
+             'yaw',      struct('Tend',10,'f0',0.5,'f1',15,'amp',deg2rad(45));
+             'altitude', struct('Tend',10,'f0',1.0,'f1',10,'amp',0.05) };
     z_hover  = -2.0;  T_take = 4.0;  T_settle = 1.5;
 
     Binv = ctrl.mixer(P);
