@@ -32,10 +32,16 @@ end
 
 %% ------------------------------------------------------------------------
 function runSysId(P, dyn, ctrl, vis)
-    axes = { 'roll',     struct('Tend',15,'f0',0.5,'f1',40,'amp',deg2rad(40));
-             'pitch',    struct('Tend',15,'f0',0.5,'f1',40,'amp',deg2rad(40));
-             'yaw',      struct('Tend',15,'f0',0.5,'f1',30,'amp',deg2rad(45));
-             'altitude', struct('Tend',15,'f0',1.0,'f1',20,'amp',0.05) };
+    % Excitation per axis. The interesting dynamics are all below ~28 Hz
+    % (motor-lag corner ~28 Hz, rate loop ~3-6 Hz, slower loops below that),
+    % so the chirp is swept only up to each channel's useful band: sweeping
+    % higher wastes energy where coherence is already low. Shorter Tend (10 s)
+    % with a lower f1 also concentrates energy in the informative band, which
+    % improves the ARX fit and coherence.
+    axes = { 'roll',     struct('Tend',5,'f0',0.5,'f1',30,'amp',deg2rad(40));
+             'pitch',    struct('Tend',5,'f0',0.5,'f1',30,'amp',deg2rad(40));
+             'yaw',      struct('Tend',5,'f0',0.5,'f1',15,'amp',deg2rad(45));
+             'altitude', struct('Tend',5,'f0',1.0,'f1',10,'amp',0.05) };
     z_hover  = -2.0;  T_take = 4.0;  T_settle = 1.5;
 
     Binv = ctrl.mixer(P);
@@ -43,13 +49,23 @@ function runSysId(P, dyn, ctrl, vis)
     s.rate_int = zeros(3,1); s.w_prev = zeros(3,1);
     s.vel_int  = zeros(3,1); s.v_prev = zeros(3,1);
     pos_sp = [0; 0; z_hover];
-    Xall = [];  phases = {};      % per-step state log and animation labels
+
+    % preallocate the full state log: growing Xall with [Xall, x] every step is
+    % O(N^2) and makes the run crawl; size it once up front and index into it.
+    nTake = round(T_take/P.dt);
+    nExc  = 0;
+    for a = 1:size(axes,1)
+        [~, exc] = chirpExcitation(P, axes{a,2});
+        nExc = nExc + round(T_settle/P.dt) + numel(exc);
+    end
+    Ntot = nTake + nExc;
+    Xall = zeros(18, Ntot);  phases = cell(1, Ntot);  idx = 0;
 
     % take off + settle
-    for k = 1:round(T_take/P.dt)
+    for k = 1:nTake
         [delta, s] = hoverStep(x, pos_sp, 0, '', 'settle', P, Binv, s);
-        x = dyn.rk4(x, delta, P, P.dt);  Xall = [Xall, x];
-        phases{end+1} = 'Take-off / hover';
+        x = dyn.rk4(x, delta, P, P.dt);
+        idx = idx + 1;  Xall(:,idx) = x;  phases{idx} = 'Take-off / hover';
     end
 
     % excite each axis
@@ -58,15 +74,17 @@ function runSysId(P, dyn, ctrl, vis)
         [~, exc] = chirpExcitation(P, axes{a,2});  Nc = numel(exc);
         for k = 1:round(T_settle/P.dt)      % settle
             [delta, s] = hoverStep(x, pos_sp, 0, '', 'settle', P, Binv, s);
-            x = dyn.rk4(x, delta, P, P.dt);  Xall = [Xall, x];
-            phases{end+1} = sprintf('Settle (before %s)', name);
+            x = dyn.rk4(x, delta, P, P.dt);
+            idx = idx + 1;  Xall(:,idx) = x;
+            phases{idx} = sprintf('Settle (before %s)', name);
         end
         U = zeros(Nc,1);  Y = zeros(Nc,1);  % chirp segment
         for k = 1:Nc
             [delta, s, uk, yk] = hoverStep(x, pos_sp, exc(k), name, 'chirp', P, Binv, s);
-            x = dyn.rk4(x, delta, P, P.dt);  Xall = [Xall, x];
+            x = dyn.rk4(x, delta, P, P.dt);
+            idx = idx + 1;  Xall(:,idx) = x;
             U(k) = uk;  Y(k) = yk;
-            phases{end+1} = sprintf('Sys-ID: %s axis', name);
+            phases{idx} = sprintf('Sys-ID: %s axis', name);
         end
         model = arxEstimate(U, Y, 2, 2, 1);
         report(name, model, U, Y, P);
@@ -80,7 +98,7 @@ function runSysId(P, dyn, ctrl, vis)
     propAng = zeros(4,Nall); pa = zeros(4,1);
     for k = 1:Nall, pa = pa + P.dir.*Xall(1:4,k)*P.dt;  propAng(:,k) = pa; end
     Panim = P;
-    Panim.vis.step   = 50;          %  step
+    Panim.vis.step   = 100;          %  step
     Panim.vis.single = true;        % single wide view (no whole-trajectory)
     Panim.vis.viewR  = 0.7;
     vis.animate(t, Xall, REF, propAng, Panim, phases);

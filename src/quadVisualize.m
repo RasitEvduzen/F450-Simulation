@@ -36,6 +36,7 @@ function animate(t, X, REF, propAng, P, phases)
 
     N = numel(t);
     fig = figure('Name','F450 Flight','Color','w','units','normalized','outerposition',[0 0 1 1]);
+    gif('SysID.gif')
     % wide-view fixed limits (whole mission, equal scale)
     allP = [REF(:,1:3); X(15:17,:)'];
     mn=min(allP,[],1); mx=max(allP,[],1); ctr=(mn+mx)/2; sp=max(mx-mn)+1.0;
@@ -104,6 +105,7 @@ function animate(t, X, REF, propAng, P, phases)
         axis(axF,[pos(1)-P.vis.viewR pos(1)+P.vis.viewR pos(2)-P.vis.viewR ...
                   pos(2)+P.vis.viewR pos(3)-P.vis.viewR pos(3)+P.vis.viewR]);
         drawnow limitrate;
+        gif
     end
 end
 
@@ -150,7 +152,7 @@ function figures(t, X, REF, ~)
     title(tl,'F450 Trajectory Tracking','FontWeight','bold');
 end
 
-function states(t, X, REF, LOG, ~)
+function states(t, X, ~, LOG, ~)
 %STATES  3x3 figure: velocity / attitude / body-rate references vs actual.
     Q = quatUtils();
     N = numel(t);
@@ -274,11 +276,11 @@ function battery(t, X, LOG, P)
 
     % (1) terminal voltage, with nominal and full-charge reference lines
     nexttile; hold on; grid on; box on;
-    plot(t, Vbat, '-','Color',cV,'LineWidth',1.6);
-    yline(P.bat.E0,'--','Color',cRef,'LineWidth',1.0,'HandleVisibility','off');
+    plot(t, Vbat, '-','Color',cV,'LineWidth',1.6,'DisplayName','E');
+    yline(P.bat.E0,'--','Color',cRef,'LineWidth',1.0,'DisplayName','E_0 nominal');
     ylabel('voltage [V]'); xlabel('time [s]'); xlim([0 te]);
     title('Battery terminal voltage  E(t)');
-    legend({'E','E_0 nominal'},'Location','best');
+    legend('Location','best');
 
     % (2) state of charge [%]
     nexttile; hold on; grid on; box on;
@@ -290,12 +292,12 @@ function battery(t, X, LOG, P)
 
     % (3) per-cell voltage (4.2 full ... 3.0 empty guide lines)
     nexttile; hold on; grid on; box on;
-    plot(t, Vcell, '-','Color',cV,'LineWidth',1.6);
+    plot(t, Vcell, '-','Color',cV,'LineWidth',1.6,'DisplayName','E/N_S');
     yline(4.2,'--','Color',[0.4 0.4 0.4],'LineWidth',0.8,'HandleVisibility','off');
     yline(3.3,'--','Color',[0.4 0.4 0.4],'LineWidth',0.8,'HandleVisibility','off');
     ylabel('cell voltage [V]'); xlabel('time [s]'); xlim([0 te]);
     title(sprintf('Per-cell voltage  (%dS pack)',P.bat.NS));
-    legend({'E/N_S'},'Location','best');
+    legend('Location','best');
 
     % (4) pack current drawn from the battery: rises with thrust demand and
     %     with voltage compensation as the pack drains

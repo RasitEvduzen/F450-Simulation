@@ -10,7 +10,6 @@
 %  Closed-loop sys-id: take off, hold hover, and excite roll/pitch/yaw/altitude
 %  in turn with a chirp added on top of the hold command. Each axis is fit with
 %  a batch-LS ARX model and reported (I/O, fit, poles, Bode, coherence, TF).
-%  STL files (Base / MotorPropCW / MotorPropCCW) must be on the path.
 % Written By: Rasit Evduzen
 % Date: 26.06.2026
 %%
