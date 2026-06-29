@@ -45,7 +45,7 @@ function runMissionMode(P, dyn, ctrl, traj, vis)
     segT = [5 10 10 10 10 5];
     yawT = 2.0;
 
-    [t, REF, REFd] = traj.build(WP, segT, yawT, P.dt);
+    [t, REF, REFd] = traj.build(WP, segT, yawT, P.dt, P.useDoubleScurve);
     N = numel(t);
 
     Binv = ctrl.mixer(P);

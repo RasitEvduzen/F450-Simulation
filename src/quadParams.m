@@ -89,6 +89,12 @@ function P = quadParams()
     P.f_pos  = 50;                    % position/velocity (outer) loop
     P.dt     = 1/P.f_phys;            % integration step [s]
 
+    %% Trajectory
+    % Per-axis translation profile for the waypoint mission (out.build):
+    %   false = 3-segment trapezoidal velocity (acceleration steps)
+    %   true  = 7-segment S-curve (finite jerk, smoother acceleration)
+    P.useDoubleScurve = true;
+
     %% Visualisation
     P.stl.base    = 'stl/Base.STL';
     P.stl.propCW  = 'stl/MotorPropCW.STL';
