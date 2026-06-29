@@ -156,7 +156,7 @@ function states(t, X, ~, LOG, ~)
     N = numel(t);
 
     % actual signals
-    vel_act = X(12:14,:);                    % vx,vy,vz [m/s]
+    vel_act = X(12:14,:);                    % v_N, v_E, v_D [m/s] (geodetic NED)
     eul_act = zeros(3,N); rate_act = X(9:11,:);
     for k=1:N, eul_act(:,k)=Q.toEulZYX(X(5:8,k)); end
     % commanded signals
@@ -170,13 +170,13 @@ function states(t, X, ~, LOG, ~)
            'units','normalized','outerposition',[0 0 1 1]);
     tl=tiledlayout(3,3,'Padding','compact','TileSpacing','compact');
 
-    vlab={'v_x [m/s]','v_y [m/s]','v_z [m/s]'};
+    vlab={'v_N [m/s]','v_E [m/s]','v_D [m/s]'};   % velocity in geodetic NED frame
     for i=1:3
         nexttile; hold on; grid on; box on;
         plot(t,vel_cmd(i,:),'--','Color',cRef,'LineWidth',1.2);
         plot(t,vel_act(i,:),'-','Color',cAct,'LineWidth',1.4);
         ylabel(vlab{i}); xlim([0 t(end)]);
-        title(['Velocity  ' vlab{i}]);
+        title(['Velocity (NED)  ' vlab{i}]);
         legend({'command','actual'},'Location','best');
     end
     alab={'roll \phi [deg]','pitch \theta [deg]','yaw \psi [deg]'};
@@ -200,7 +200,7 @@ function states(t, X, ~, LOG, ~)
         title(['Body rate  ' rlab{i}]);
         legend({'command','actual'},'Location','best');
     end
-    title(tl,'Velocity / Attitude / Body-rate tracking','FontWeight','bold');
+    title(tl,'Velocity (NED) / Attitude / Body-rate tracking','FontWeight','bold');
 end
 
 function motors(t, LOG, ~)

@@ -66,7 +66,7 @@ function out = quadDynamics()
 %        rotor spin axis +z in the gyroscopic term (consistent with n_i).
 %     6. Gyroscopic momentum coupling (omega x sum th_i*JR*n_i*Omega_i) is KEPT;
 %        the spin-up reaction torque (sum th_i*JR*n_i*Omdot_i) is OMITTED
-%        (JR small, consistent with the control-design model).
+%        (JR small, numerically stiff at 1 kHz; see the note at the wdot line).
 %     7. MOTOR (NEW vs. baseline): the lumped tuned form has been replaced by
 %        the physical Eq. 3.36 with real kT, ke, Rmot. Armature inductance L
 %        is neglected (electrical time constant L/Rmot ~0.3 ms is ~1000x faster
@@ -116,7 +116,32 @@ function xdot = quadDeriv(x, delta, P)
         rotorAng = rotorAng + P.dir(i)*P.JR*Om(i)*[0;0;1];
     end
 
-    % --- rotational dynamics with gyroscopic coupling (reaction torque omitted)
+    % --- rotational dynamics with gyroscopic coupling --------------------------
+    % wdot = Jb \ ( tau - omega x (Jb*omega + h_R) - tau_spin )
+    %
+    % SPIN-UP REACTION TORQUE (tau_spin) IS OMITTED ON PURPOSE.
+    % Full term (would be subtracted inside the bracket below):
+    %     tau_spin = sum_i th_i * JR * n_i * Omdot_i
+    %     Omdot_i  = ( (kT/Rmot)*(Ebat*delta_i - ke*Omega_i) - MF - cQ*Omega_i^2 ) / JR
+    % With n_i = [0;0;-1] it acts only on yaw: ~0 for a collective change
+    % (CCW/CW cancel) and nonzero for a yaw manoeuvre.
+    %
+    % Why it is left out:
+    %  - Numerically stiff. JR is tiny (6e-5), so when delta changes Omdot spikes
+    %    to ~1e4 rad/s^2 for a few ms. That makes tau_spin ~0.5 Nm, ~10x the real
+    %    aerodynamic yaw torque (~0.05 Nm), and at the 1 kHz RK4 step it drives the
+    %    closed loop unstable (the vehicle tumbles).
+    %  - Two physical fixes were tried and neither held: (a) a first-order ESC lag
+    %    on delta (smooths the Omdot spike but, at tau_esc ~ the step size, did not
+    %    cure the instability); (b) operator splitting (freeze tau_spin across the
+    %    RK4 sub-steps) - it removed the sub-step inconsistency but the loop still
+    %    diverged in full closed-loop missions.
+    %  - Effect is small anyway: JR is small, the term is zero in steady flight and
+    %    only transient during manoeuvres. Stephan likewise drops it in the control
+    %    design model, so omitting it is the standard, defensible choice here.
+    %  - To re-enable: compute tau_spin (per-step, frozen) and subtract it below.
+    %    A stiff/implicit integrator or a slower-acceleration motor model would be
+    %    needed first.
     wdot = P.Jb \ (tau - cross(w, P.Jb*w + rotorAng));
 
     % --- kinematics, translation (NED, gravity +z), position ---------------
