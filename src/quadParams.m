@@ -43,7 +43,7 @@ function P = quadParams()
     P.bat.Qexp    = 0.35;           % exponential-zone inverse decay [Ah]
     P.bat.Rbat    = 0.010;          % internal resistance [Ohm] (voltage sag)
     P.bat.Q_init  = P.bat.Q0;        % initial charge [Ah] (start full)
-
+    
     %% Geometry: F450 X-config
     % M1 front-right (CCW), M2 rear-left (CCW), M3 front-left (CW), M4 rear-right (CW)
     P.arm = 0.225;                    % rotor radius from CoG [m] (450 mm span)
